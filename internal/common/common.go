@@ -390,3 +390,21 @@ func getSysctrlEnv(env []string) []string {
 	}
 	return env
 }
+
+// https://github.com/distatus/battery/blob/916919eb43bd0567646f048c0fb0e8c61a4ebc24/errors.go#L115
+// Allows for returning multiple errors in a single function call.
+type Errors []error
+
+// Implement error interface for Errors
+func (e Errors) Error() string {
+	s := "["
+	for _, err := range e {
+		if err != nil {
+			s += err.Error() + " "
+		}
+	}
+	if len(s) > 1 {
+		s = s[:len(s)-1]
+	}
+	return s + "]"
+}

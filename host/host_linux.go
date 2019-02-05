@@ -641,6 +641,7 @@ func SensorsTemperaturesWithContext(ctx context.Context) ([]TemperatureStat, err
 	// power/            temp1_label       temp2_label       temp3_label       temp4_label       temp5_label       temp6_label       temp7_label
 	// subsystem/        temp1_max         temp2_max         temp3_max         temp4_max         temp5_max         temp6_max         temp7_max
 	// temp1_crit        temp2_crit        temp3_crit        temp4_crit        temp5_crit        temp6_crit        temp7_crit        uevent
+	var errors common.Errors
 	for _, file := range files {
 		filename := strings.Split(filepath.Base(file), "_")
 		if filename[1] == "label" {
@@ -656,19 +657,22 @@ func SensorsTemperaturesWithContext(ctx context.Context) ([]TemperatureStat, err
 			label = fmt.Sprintf("%s_", strings.Join(strings.Split(strings.TrimSpace(strings.ToLower(string(c))), " "), ""))
 		}
 
-		// Get the name of the tempearture you are reading
+		// Get the name of the temperature you are reading
 		name, err := ioutil.ReadFile(filepath.Join(filepath.Dir(file), "name"))
 		if err != nil {
-			return temperatures, err
+			errors = append(errors, err)
+			continue
 		}
 
 		// Get the temperature reading
 		current, err := ioutil.ReadFile(file)
 		if err != nil {
-			return temperatures, err
+			errors = append(errors, err)
+			continue
 		}
 		temperature, err := strconv.ParseFloat(strings.TrimSpace(string(current)), 64)
 		if err != nil {
+			errors = append(errors, err)
 			continue
 		}
 
@@ -678,5 +682,9 @@ func SensorsTemperaturesWithContext(ctx context.Context) ([]TemperatureStat, err
 			Temperature: temperature / 1000.0,
 		})
 	}
-	return temperatures, nil
+
+	if len(errors) == 0 {
+		return temperatures, nil
+	}
+	return temperatures, errors
 }
