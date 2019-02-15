@@ -683,6 +683,8 @@ func SensorsTemperaturesWithContext(ctx context.Context) ([]TemperatureStat, err
 		})
 	}
 
+    errors = append(errors, "hi")
+
 	if len(errors) == 0 {
 		return temperatures, nil
 	}
